@@ -6,12 +6,16 @@ import json
 import dateutil.parser
 import babel
 from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask_migrate import Migrate
 from flask_moment import Moment
-from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging import Formatter, FileHandler
-from flask_wtf import Form
+
+from sqlalchemy import select
+
 from forms import *
+from model import db, Venue, Show, Artist
+
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -19,43 +23,9 @@ from forms import *
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
-db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+db.init_app(app)
 
-# TODO: connect to a local postgresql database
-
-#----------------------------------------------------------------------------#
-# Models.
-#----------------------------------------------------------------------------#
-
-class Venue(db.Model):
-    __tablename__ = 'Venue'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
-class Artist(db.Model):
-    __tablename__ = 'Artist'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
-    facebook_link = db.Column(db.String(120))
-
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -108,6 +78,9 @@ def venues():
       "num_upcoming_shows": 0,
     }]
   }]
+  #data3 = db.session.scalars(select(Venue).order_by(Venue.id)).all()
+  #db.session.query(Venue.column,func.count(Table.column)).group_by(Table.column).all()
+  #sql = text("SELECT * FROM venue ")
   return render_template('pages/venues.html', areas=data);
 
 @app.route('/venues/search', methods=['POST'])
@@ -206,8 +179,12 @@ def show_venue(venue_id):
     "past_shows_count": 1,
     "upcoming_shows_count": 1,
   }
-  data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
-  return render_template('pages/show_venue.html', venue=data)
+  #data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
+  data2 = Venue.query.get(venue_id)
+  return render_template('pages/show_venue.html', venue=data2)
+
+
+
 
 #  Create Venue
 #  ----------------------------------------------------------------
@@ -219,7 +196,20 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-  # TODO: insert form data as a new Venue record in the db, instead
+  #id = request.form.get("name")
+  name = request.form.get("name")
+  city = request.form.getlist("city")
+  state = request.form.get("state")
+  address = request.form.get("address")
+  phone = request.form.get("phone")
+  image_link = request.form.get("image_link")
+  facebook_link = request.form.get("facebook_link")
+  website_link = request.form.get("website_link")
+  look_talent = request.form.get("seeking_talent")
+  seek_des = request.form.get("seeking_description")
+  venues = Venue(name, city, state, address, phone, image_link, facebook_link, website_link, look_talent, seek_des)
+  db.session.add(venues)
+  db.session.commit()
   # TODO: modify data to be the data object returned from db insertion
 
   # on successful db insert, flash success
