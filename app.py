@@ -109,7 +109,7 @@ def search_venues():
                     venue.name, 
                     venue.id
                 """)
-        result = db.session.execute(sql, {'search_term': f'%{input_sel}%'})
+        result = db.session.execute(sql, {'search_term': f'%{input_sel}%'}).fetchall()
         data_list = []
         count_result = 0
         # format data
@@ -181,7 +181,7 @@ def delete_venue(venue_id):
     # clicking that button delete it from the db then redirect the user to the homepage
     try:
         sql = text("DELETE FROM venue WHERE venue.id = :delete_id")
-        db.session.execute(sql, {'delete_id': venue_id})
+        db.session.execute(sql, {'delete_id': venue_id}).fetchall()
         db.session.commit()
         return jsonify({'message': 'Venue deleted successfully'}), 200
     except:
@@ -221,7 +221,7 @@ def search_artists():
              GROUP BY artist.name, 
                       artist.id
                 """)
-        result = db.session.execute(sql, {'search_term': f'%{input_sel}%'})
+        result = db.session.execute(sql, {'search_term': f'%{input_sel}%'}).fetchall()
         data_list = []
         count_result = 0
         # format data
@@ -257,7 +257,7 @@ def show_artist_by_id(artist_id):
                     WHERE 
                         artist.id = :search_item
                     """)
-    result = db.session.execute(sql, {'search_item': artist_id})
+    result = db.session.execute(sql, {'search_item': artist_id}).fetchall()
 
     upcoming_shows = []
     data = {}
@@ -454,7 +454,7 @@ def shows():
                 LEFT JOIN artist_shows ON shows.id = artist_shows.show_id
                 LEFT JOIN artist ON artist.id = artist_shows.artist_id
     """)
-    result = db.session.execute(sql)
+    result = db.session.execute(sql).fetchall()
     data = []
     for i in result:
         data_item = {
